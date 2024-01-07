@@ -22,7 +22,7 @@ Parameters:
 
 Example:
 ```bash
-curl "http://127.0.0.1:2339/image-name.jpg?data=https://example.com/&w=100"
+curl "http://127.0.0.1:2339/image-name.jpg?data=https://example.com/&size=300"
 ```
 
 <div align="right"><img src="https://github-production-user-asset-6210df.s3.amazonaws.com/1774972/269361517-d0d8e30e-4a25-4ba2-b926-2a42da1156f8.svg" width="32" alt="248"></div>
