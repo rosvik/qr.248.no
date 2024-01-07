@@ -35,7 +35,7 @@ struct GetQrParameters {
     size: Option<u32>,
 }
 async fn get_qr(Path(_): Path<String>, Query(query): Query<GetQrParameters>) -> impl IntoResponse {
-    let size = query.size.unwrap_or(1024);
+    let size = query.size.unwrap_or(1024).min(4096);
     let data = query.data;
     println!("Generated QR code for '{}' at {}px", data, size);
 
