@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="https://248.no/favicon.svg" />
+    <title>img.248.no</title>
+    <style>
+      * {
+        font-family: "Berkeley Mono", Menlo, monospace;
+        font-size: 12px;
+        color: white;
+      }
+      ::placeholder {
+        opacity: 0.5;
+      }
+      body {
+        background-color: #0f1419;
+        max-width: 700px;
+        margin: auto;
+        padding: 2em;
+        text-align: left;
+      }
+      table {
+        width: 100%;
+      }
+      tr > * {
+        padding: 0.2em;
+      }
+      input {
+        background-color: #1f2931;
+        border: 1px solid gray;
+        padding: 1em;
+        outline: none;
+        width: calc(100% - 2em - 2px);
+      }
+      input:focus {
+        border-color: white;
+      }
+      input:invalid {
+        border-color: #a01f02;
+      }
+      input[type="number"] {
+        appearance: textfield;
+      }
+      input[type="submit"] {
+        width: 100%;
+        text-transform: uppercase;
+        border-color: rgba(242, 151, 24, 0.5);
+        background-color: rgba(242, 151, 24, 0.3);
+      }
+      input[type="submit"]:focus,
+      input[type="submit"]:hover {
+        border-color: rgb(242, 151, 24);
+        background-color: rgba(242, 151, 24, 0.5);
+      }
+      input[type="submit"]:hover {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <form action="/qr.png" method="get">
+      <table>
+        <tr>
+          <th colspan="2">Generate QR code</th>
+        </tr>
+        <tr>
+          <td><label for="url">Data / URL</label></td>
+          <td><input type="url" name="url" placeholder="url" /></td>
+        </tr>
+        <tr>
+          <td><label for="w">Width</label></td>
+          <td><input type="number" name="w" placeholder="w" /></td>
+        </tr>
+        <tr>
+          <td colspan="2">
+            <input type="submit" value="Submit" />
+          </td>
+        </tr>
+      </table>
+    </form>
+  </body>
+</html>

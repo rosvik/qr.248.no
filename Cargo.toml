@@ -1,0 +1,14 @@
+[package]
+name = "img-248-no"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+axum = "0.6.19"
+http = "0.2.9"
+image = "0.24.6"
+qrcode-generator = "4.1.9"
+serde = { version = "1", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
