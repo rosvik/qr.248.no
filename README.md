@@ -1,9 +1,8 @@
 # qr.248.no
 
-A simple Rust-based tool and API that allows you to QR codes. The API uses the Axum framework for handling HTTP requests and responses and the Serde library for deserializing query parameters.
+A simple Rust-based tool and API that allows you to QR codes.
 
-A QR code to this repository is 
-https://qr.248.no/qr.png?data=https%3A%2F%2Fgithub.com%2Frosvik%2Fqr.248.no&size=500
+A QR code to this repository can be found at https://qr.248.no/qr.png?data=https%3A%2F%2Fgithub.com%2Frosvik%2Fqr.248.no&size=500
 
 ## How to Use
 
