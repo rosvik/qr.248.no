@@ -40,12 +40,12 @@
       select {
         width: 100%;
       }
+      input:invalid {
+        border-color: #b02303;
+      }
       input:focus,
       select:focus {
         border-color: white;
-      }
-      input:invalid {
-        border-color: #a01f02;
       }
       input[type="number"] {
         appearance: textfield;
@@ -75,7 +75,15 @@
         </tr>
         <tr>
           <td><label for="data">Data / URL</label></td>
-          <td><input type="text" name="data" placeholder="data" /></td>
+          <td>
+            <input
+              type="text"
+              name="data"
+              placeholder="data"
+              required
+              autofocus
+            />
+          </td>
         </tr>
         <tr>
           <td><label for="size">Image size</label></td>
