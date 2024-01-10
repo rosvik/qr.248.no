@@ -34,6 +34,7 @@ struct GetQrParameters {
     data: String,
     #[serde(default, deserialize_with = "empty_string_as_none")]
     size: Option<u32>,
+    format: Option<String>,
 }
 async fn get_qr(
     Path(filename): Path<String>,
@@ -51,8 +52,15 @@ async fn get_qr(
         .min_dimensions(size, size)
         .build();
 
-    let format: ImageFormat = get_format_from_filename(filename).unwrap_or(ImageFormat::Png);
-    let (result_bytes, header_value) = encode_image(image, format);
+    let image_format = match get_format_from_filename(match query.format {
+        Some(param) => format!(".{}", param),
+        None => "".into(),
+    }) {
+        Some(format) => format,
+        None => get_format_from_filename(filename).unwrap_or(ImageFormat::Png),
+    };
+
+    let (result_bytes, header_value) = encode_image(image, image_format);
 
     let mut image_headers = HeaderMap::new();
     image_headers.insert(http::header::CONTENT_TYPE, header_value);
@@ -74,7 +82,7 @@ where
 }
 
 fn get_format_from_filename(filename: String) -> Option<ImageFormat> {
-    if filename.ends_with(".png") {
+    if filename.to_lowercase().ends_with(".png") {
         Some(ImageFormat::Png)
     } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
         Some(ImageFormat::Jpeg)
