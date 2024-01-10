@@ -6,7 +6,7 @@ use axum::{
     Router,
 };
 use http::HeaderValue;
-use image::{codecs::png::PngEncoder, ColorType, ImageEncoder, Luma};
+use image::{codecs::*, ColorType, ImageEncoder, ImageFormat, Luma};
 use qrcode::QrCode;
 use serde::{de, Deserialize, Deserializer};
 use std::{fmt, net::SocketAddr, str::FromStr};
@@ -35,7 +35,10 @@ struct GetQrParameters {
     #[serde(default, deserialize_with = "empty_string_as_none")]
     size: Option<u32>,
 }
-async fn get_qr(Path(_): Path<String>, Query(query): Query<GetQrParameters>) -> impl IntoResponse {
+async fn get_qr(
+    Path(filename): Path<String>,
+    Query(query): Query<GetQrParameters>,
+) -> impl IntoResponse {
     let size = query.size.unwrap_or(1024).min(4096);
     let data = query.data;
     println!("Generating QR code for '{}' at {}px", data, size);
@@ -47,25 +50,13 @@ async fn get_qr(Path(_): Path<String>, Query(query): Query<GetQrParameters>) -> 
         .render::<Luma<u8>>()
         .min_dimensions(size, size)
         .build();
-    let width = image.width();
-    let height = image.height();
 
-    // TODO: Support other image formats and SVG
-    let mut result_bytes: Vec<u8> = Vec::new();
-    let encoder: PngEncoder<&mut Vec<u8>> = PngEncoder::new(&mut result_bytes);
-    match encoder.write_image(&image.into_raw(), width, height, ColorType::L8) {
-        Ok(_) => {}
-        Err(e) => {
-            println!("Failed to encode image: {}", e);
-            return (StatusCode::INTERNAL_SERVER_ERROR, HeaderMap::new(), vec![]);
-        }
-    }
+    let format: ImageFormat = get_format_from_filename(filename).unwrap_or(ImageFormat::Png);
+    let (result_bytes, header_value) = encode_image(image, format);
 
     let mut image_headers = HeaderMap::new();
-    image_headers.insert(
-        http::header::CONTENT_TYPE,
-        HeaderValue::from_static("image/png"),
-    );
+    image_headers.insert(http::header::CONTENT_TYPE, header_value);
+
     (StatusCode::OK, image_headers, result_bytes)
 }
 
@@ -80,4 +71,59 @@ where
         None | Some("") => Ok(None),
         Some(s) => FromStr::from_str(s).map_err(de::Error::custom).map(Some),
     }
+}
+
+fn get_format_from_filename(filename: String) -> Option<ImageFormat> {
+    if filename.ends_with(".png") {
+        Some(ImageFormat::Png)
+    } else if filename.ends_with(".jpg") || filename.ends_with(".jpeg") {
+        Some(ImageFormat::Jpeg)
+    } else if filename.ends_with(".gif") {
+        Some(ImageFormat::Gif)
+    } else if filename.ends_with(".bmp") {
+        Some(ImageFormat::Bmp)
+    } else if filename.ends_with(".ico") {
+        Some(ImageFormat::Ico)
+    } else if filename.ends_with(".tiff") || filename.ends_with(".tif") {
+        Some(ImageFormat::Tiff)
+    } else if filename.ends_with(".webp") {
+        Some(ImageFormat::WebP)
+    } else {
+        None
+    }
+}
+
+fn encode_image(
+    image: image::ImageBuffer<Luma<u8>, Vec<u8>>,
+    format: ImageFormat,
+) -> (Vec<u8>, HeaderValue) {
+    let w = image.width();
+    let h = image.height();
+    let color_type = ColorType::L8;
+
+    let mut result_bytes: Vec<u8> = Vec::new();
+
+    let header_value: HeaderValue = match format {
+        ImageFormat::Jpeg => {
+            jpeg::JpegEncoder::new(&mut result_bytes)
+                .encode(&image.into_raw(), w, h, color_type)
+                .unwrap();
+            HeaderValue::from_static("image/jpeg")
+        }
+        ImageFormat::Bmp => {
+            bmp::BmpEncoder::new(&mut result_bytes)
+                .encode(&image.into_raw(), w, h, color_type)
+                .unwrap();
+            HeaderValue::from_static("image/bmp")
+        }
+        // TODO: ImageFormat::Tiff
+        // TODO: ImageFormat::Gif
+        _ => {
+            png::PngEncoder::new(&mut result_bytes)
+                .write_image(&image.into_raw(), w, h, color_type)
+                .unwrap();
+            HeaderValue::from_static("image/png")
+        }
+    };
+    (result_bytes, header_value)
 }
