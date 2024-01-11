@@ -21,7 +21,7 @@ The API will start running on `http://127.0.0.1:2339`.
 Parameters:
 - `data`: The data to be encoded in the QR code.
 - `size`: The size of the image in pixels. The generator doesn't usually give a image of the exact size requested, but rounds to a larger size where the "QR pixels" are an even amount of "image pixels". _Default: 1000_
-- `format`: The format of the generated image. Supports `png`, `jpg`/`jpeg` and `bmp`. The format can either be given as a url param, or as file extension to the route name. (`/image.jpg` or `/image?format=jpg`) _Defaults to `png`_
+- `format`: The format of the generated image. Supports `png`, `jpg`/`jpeg`, `bmp` and `svg`. The format can either be given as a url param, or as file extension to the route name. (`/image.jpg` or `/image?format=jpg`) _Defaults to `png`_
 
 Example:
 ```bash
