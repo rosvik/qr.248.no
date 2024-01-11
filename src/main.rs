@@ -1,21 +1,19 @@
-use axum::{
-    extract::{Path, Query},
-    http::{HeaderMap, StatusCode},
-    response::{Html, IntoResponse},
-    routing::get,
-    Router,
-};
+use axum::extract::{Path, Query};
+use axum::http::{HeaderMap, StatusCode};
+use axum::response::{Html, IntoResponse};
+use axum::Router;
 use http::HeaderValue;
-use image::{codecs::*, ColorType, ImageEncoder, ImageFormat, Luma};
-use qrcode::{render::svg, QrCode};
-use serde::{de, Deserialize, Deserializer};
-use std::{fmt, net::SocketAddr, str::FromStr};
+use image::codecs::{bmp::BmpEncoder, jpeg::JpegEncoder, png::PngEncoder};
+use image::{ColorType, ImageEncoder, ImageFormat, Luma};
+use qrcode::QrCode;
+use serde::{Deserialize, Deserializer};
+use std::{net::SocketAddr, str::FromStr};
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
-        .route("/", get(index))
-        .route("/:filename", get(get_qr));
+        .route("/", axum::routing::get(index))
+        .route("/:filename", axum::routing::get(get_qr));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 2339));
     println!("Listening on http://{}", addr);
@@ -93,7 +91,7 @@ fn get_svg(data: &String, size: u32) -> (StatusCode, HeaderMap, Vec<u8>) {
     };
     // TODO: Add color options
     let image = code
-        .render::<svg::Color>()
+        .render::<qrcode::render::svg::Color>()
         .min_dimensions(size, size)
         .build();
 
@@ -112,12 +110,14 @@ fn empty_string_as_none<'de, D, T>(de: D) -> Result<Option<T>, D::Error>
 where
     D: Deserializer<'de>,
     T: FromStr,
-    T::Err: fmt::Display,
+    T::Err: std::fmt::Display,
 {
     let opt = Option::<String>::deserialize(de)?;
     match opt.as_deref() {
         None | Some("") => Ok(None),
-        Some(s) => FromStr::from_str(s).map_err(de::Error::custom).map(Some),
+        Some(s) => FromStr::from_str(s)
+            .map_err(serde::de::Error::custom)
+            .map(Some),
     }
 }
 
@@ -153,13 +153,13 @@ fn encode_image(
 
     let header_value: HeaderValue = match format {
         ImageFormat::Jpeg => {
-            jpeg::JpegEncoder::new(&mut result_bytes)
+            JpegEncoder::new(&mut result_bytes)
                 .encode(&image.into_raw(), w, h, color_type)
                 .unwrap();
             HeaderValue::from_static("image/jpeg")
         }
         ImageFormat::Bmp => {
-            bmp::BmpEncoder::new(&mut result_bytes)
+            BmpEncoder::new(&mut result_bytes)
                 .encode(&image.into_raw(), w, h, color_type)
                 .unwrap();
             HeaderValue::from_static("image/bmp")
@@ -167,7 +167,7 @@ fn encode_image(
         // TODO: ImageFormat::Tiff
         // TODO: ImageFormat::Gif
         _ => {
-            png::PngEncoder::new(&mut result_bytes)
+            PngEncoder::new(&mut result_bytes)
                 .write_image(&image.into_raw(), w, h, color_type)
                 .unwrap();
             HeaderValue::from_static("image/png")
