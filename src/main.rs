@@ -7,7 +7,7 @@ use axum::{
 };
 use http::HeaderValue;
 use image::{codecs::*, ColorType, ImageEncoder, ImageFormat, Luma};
-use qrcode::QrCode;
+use qrcode::{render::svg, QrCode};
 use serde::{de, Deserialize, Deserializer};
 use std::{fmt, net::SocketAddr, str::FromStr};
 
@@ -42,7 +42,17 @@ async fn get_qr(
 ) -> impl IntoResponse {
     let size = query.size.unwrap_or(1024).min(4096);
     let data = query.data;
+    let format = query.format;
     println!("Generating QR code for '{}' at {}px", data, size);
+
+    let is_svg = match format.clone() {
+        Some(param) => param == "svg",
+        None => filename.ends_with(".svg"),
+    };
+    if is_svg {
+        let (status_code, headers, result_bytes) = get_svg(&data, size);
+        return (status_code, headers, result_bytes);
+    }
 
     let qrcode = QrCode::new(data).unwrap();
 
@@ -52,7 +62,7 @@ async fn get_qr(
         .min_dimensions(size, size)
         .build();
 
-    let image_format = match get_format_from_filename(match query.format {
+    let image_format = match get_format_from_filename(match format {
         Some(param) => format!(".{}", param),
         None => "".into(),
     }) {
@@ -66,6 +76,36 @@ async fn get_qr(
     image_headers.insert(http::header::CONTENT_TYPE, header_value);
 
     (StatusCode::OK, image_headers, result_bytes)
+}
+
+fn get_svg(data: &String, size: u32) -> (StatusCode, HeaderMap, Vec<u8>) {
+    println!("Data: {}", data);
+    let code = match QrCode::new(data) {
+        Ok(code) => code,
+        Err(e) => {
+            println!("Error: {}", e);
+            return (
+                StatusCode::BAD_REQUEST,
+                HeaderMap::new(),
+                "Invalid data".as_bytes().to_vec(),
+            );
+        }
+    };
+    // TODO: Add color options
+    let image = code
+        .render::<svg::Color>()
+        .min_dimensions(size, size)
+        .build();
+
+    println!("{}", image);
+
+    let mut image_headers = HeaderMap::new();
+    image_headers.insert(
+        http::header::CONTENT_TYPE,
+        HeaderValue::from_static("image/svg+xml"),
+    );
+
+    (StatusCode::OK, image_headers, image.as_bytes().to_vec())
 }
 
 fn empty_string_as_none<'de, D, T>(de: D) -> Result<Option<T>, D::Error>
