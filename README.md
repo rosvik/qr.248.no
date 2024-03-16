@@ -1,6 +1,6 @@
 # qr.248.no
 
-A simple Rust-based tool and API that allows you to QR codes.
+A simple Rust-based tool and API that allows you to generate QR codes.
 
 A QR code to this repository can be found at https://qr.248.no/qr.png?data=https%3A%2F%2Fgithub.com%2Frosvik%2Fqr.248.no&size=500
 
@@ -20,7 +20,7 @@ The API will start running on `http://127.0.0.1:2339`.
 
 Parameters:
 - `data`: The data to be encoded in the QR code.
-- `size`: The size of the image in pixels. The generator doesn't usually give a image of the exact size requested, but rounds to a larger size where the "QR pixels" are an even amount of "image pixels". _Default: 1000_
+- `size`: The width and height of the image in pixels. The generator doesn't usually give a image of the exact size requested, but rounds to a larger size where the "QR pixels" are an even amount of "image pixels". _Default: 1000_
 - `format`: The format of the generated image. Supports `png`, `jpg`/`jpeg`, `bmp` and `svg`. The format can either be given as a url param, or as file extension to the route name. (`/image.jpg` or `/image?format=jpg`) _Defaults to `png`_
 
 Example:
