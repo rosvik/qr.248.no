@@ -1,26 +1,23 @@
 use axum::extract::{Path, Query};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{self, HeaderMap, HeaderValue, StatusCode};
 use axum::response::{Html, IntoResponse};
 use axum::Router;
-use http::HeaderValue;
 use image::codecs::{bmp::BmpEncoder, jpeg::JpegEncoder, png::PngEncoder};
 use image::{ColorType, ImageEncoder, ImageFormat, Luma};
 use qrcode::QrCode;
 use serde::{Deserialize, Deserializer};
-use std::{net::SocketAddr, str::FromStr};
+
+const ADDR: &str = "127.0.0.1:2339";
 
 #[tokio::main]
 async fn main() {
     let app = Router::new()
         .route("/", axum::routing::get(index))
-        .route("/:filename", axum::routing::get(get_qr));
+        .route("/{filename}", axum::routing::get(get_qr));
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 2339));
-    println!("Listening on http://{}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = tokio::net::TcpListener::bind(ADDR).await.unwrap();
+    println!("Listening on http://{}", ADDR);
+    axum::serve(listener, app).await.unwrap();
 }
 
 async fn index() -> Html<&'static str> {
@@ -109,13 +106,13 @@ fn get_svg(data: &String, size: u32) -> (StatusCode, HeaderMap, Vec<u8>) {
 fn empty_string_as_none<'de, D, T>(de: D) -> Result<Option<T>, D::Error>
 where
     D: Deserializer<'de>,
-    T: FromStr,
+    T: std::str::FromStr,
     T::Err: std::fmt::Display,
 {
     let opt = Option::<String>::deserialize(de)?;
     match opt.as_deref() {
         None | Some("") => Ok(None),
-        Some(s) => FromStr::from_str(s)
+        Some(s) => std::str::FromStr::from_str(s)
             .map_err(serde::de::Error::custom)
             .map(Some),
     }
