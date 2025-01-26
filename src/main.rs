@@ -7,16 +7,19 @@ use image::{ColorType, ImageEncoder, ImageFormat, Luma};
 use qrcode::QrCode;
 use serde::{Deserialize, Deserializer};
 
-const ADDR: &str = "0.0.0.0:2339";
-
 #[tokio::main]
 async fn main() {
+    dotenv::dotenv().ok();
+    let port = std::env::var("PORT").unwrap_or("2339".to_string());
+    let host = std::env::var("HOST").unwrap_or("0.0.0.0".to_string());
+    let addr = format!("{}:{}", host, port);
+
     let app = Router::new()
         .route("/", axum::routing::get(index))
         .route("/{filename}", axum::routing::get(get_qr));
 
-    let listener = tokio::net::TcpListener::bind(ADDR).await.unwrap();
-    println!("Listening on http://{}", ADDR);
+    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
+    println!("Listening on http://{}", addr);
     axum::serve(listener, app).await.unwrap();
 }
 
