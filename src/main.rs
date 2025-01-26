@@ -1,5 +1,5 @@
 use axum::extract::{Path, Query};
-use axum::http::{self, HeaderMap, HeaderValue, StatusCode};
+use axum::http::{header::CONTENT_TYPE, HeaderMap, HeaderValue, StatusCode};
 use axum::response::{Html, IntoResponse};
 use axum::Router;
 use image::codecs::{bmp::BmpEncoder, jpeg::JpegEncoder, png::PngEncoder};
@@ -68,7 +68,7 @@ async fn get_qr(
     let (result_bytes, header_value) = encode_image(image, image_format);
 
     let mut image_headers = HeaderMap::new();
-    image_headers.insert(http::header::CONTENT_TYPE, header_value);
+    image_headers.insert(CONTENT_TYPE, header_value);
 
     (StatusCode::OK, image_headers, result_bytes)
 }
@@ -95,10 +95,7 @@ fn get_svg(data: &String, size: u32) -> (StatusCode, HeaderMap, Vec<u8>) {
     println!("{}", image);
 
     let mut image_headers = HeaderMap::new();
-    image_headers.insert(
-        http::header::CONTENT_TYPE,
-        HeaderValue::from_static("image/svg+xml"),
-    );
+    image_headers.insert(CONTENT_TYPE, HeaderValue::from_static("image/svg+xml"));
 
     (StatusCode::OK, image_headers, image.as_bytes().to_vec())
 }
