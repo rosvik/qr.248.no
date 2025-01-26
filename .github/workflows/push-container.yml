@@ -20,7 +20,7 @@ jobs:
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: qr-248-no
+          image: qr.248.no
           tags: main ${{ github.sha }}
           platforms: linux/amd64, linux/arm64
           oci: true
