@@ -7,7 +7,7 @@ use image::{ColorType, ImageEncoder, ImageFormat, Luma};
 use qrcode::QrCode;
 use serde::{Deserialize, Deserializer};
 
-const ADDR: &str = "127.0.0.1:2339";
+const ADDR: &str = "0.0.0.0:2339";
 
 #[tokio::main]
 async fn main() {
