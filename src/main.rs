@@ -1,3 +1,6 @@
+mod deserializers;
+
+use crate::deserializers::empty_string_as_none;
 use axum::extract::{Path, Query};
 use axum::http::{header::CONTENT_TYPE, HeaderMap, HeaderValue, StatusCode};
 use axum::response::{Html, IntoResponse};
@@ -5,7 +8,7 @@ use axum::Router;
 use image::codecs::{bmp::BmpEncoder, jpeg::JpegEncoder, png::PngEncoder};
 use image::{ColorType, ImageEncoder, ImageFormat, Luma};
 use qrcode::QrCode;
-use serde::{Deserialize, Deserializer};
+use serde::Deserialize;
 
 #[tokio::main]
 async fn main() {
@@ -101,21 +104,6 @@ fn get_svg(data: &String, size: u32) -> (StatusCode, HeaderMap, Vec<u8>) {
     image_headers.insert(CONTENT_TYPE, HeaderValue::from_static("image/svg+xml"));
 
     (StatusCode::OK, image_headers, image.as_bytes().to_vec())
-}
-
-fn empty_string_as_none<'de, D, T>(de: D) -> Result<Option<T>, D::Error>
-where
-    D: Deserializer<'de>,
-    T: std::str::FromStr,
-    T::Err: std::fmt::Display,
-{
-    let opt = Option::<String>::deserialize(de)?;
-    match opt.as_deref() {
-        None | Some("") => Ok(None),
-        Some(s) => std::str::FromStr::from_str(s)
-            .map_err(serde::de::Error::custom)
-            .map(Some),
-    }
 }
 
 fn get_format_from_filename(filename: String) -> Option<ImageFormat> {
