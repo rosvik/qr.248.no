@@ -12,3 +12,4 @@ serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
 image = { version = "0.24", default-features = true }
 dotenv = "0.15.0"
+base64 = "0.22.1"

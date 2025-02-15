@@ -65,6 +65,19 @@
       select:hover {
         cursor: pointer;
       }
+      input[type="checkbox"] {
+        width: 1.5em;
+        height: 1.5em;
+        margin: 1em;
+        accent-color: white;
+        filter: brightness(95%) contrast(0.7) invert(1);
+      }
+      input[type="checkbox"]:checked {
+        filter: none;
+      }
+      input[type="checkbox"]:focus {
+        outline: auto;
+      }
     </style>
   </head>
   <body>
@@ -100,6 +113,10 @@
               <option value="svg">SVG</option>
             </select>
           </td>
+        </tr>
+        <tr>
+          <td><label for="base64">Base 64</label></td>
+          <td><input type="checkbox" name="base64" /></td>
         </tr>
         <tr>
           <td colspan="2">

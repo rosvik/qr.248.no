@@ -1,6 +1,6 @@
 mod deserializers;
 
-use crate::deserializers::empty_string_as_none;
+use crate::deserializers::{empty_string_as_none, string_as_bool};
 use axum::extract::{Path, Query};
 use axum::http::{header::CONTENT_TYPE, HeaderMap, HeaderValue, StatusCode};
 use axum::response::{Html, IntoResponse};
@@ -36,6 +36,8 @@ struct GetQrParameters {
     #[serde(default, deserialize_with = "empty_string_as_none")]
     size: Option<u32>,
     format: Option<String>,
+    #[serde(default, deserialize_with = "string_as_bool")]
+    base64: bool,
 }
 async fn get_qr(
     Path(filename): Path<String>,
@@ -72,8 +74,14 @@ async fn get_qr(
     };
 
     let result_bytes = encode_image(image, image_format);
-
     let mut image_headers = HeaderMap::new();
+
+    if query.base64 {
+        let b64_data = to_base64(&result_bytes, image_format);
+        image_headers.insert(CONTENT_TYPE, HeaderValue::from_static("text/plain"));
+        return (StatusCode::OK, image_headers, b64_data.into());
+    }
+
     image_headers.insert(
         CONTENT_TYPE,
         HeaderValue::from_static(image_format.to_mime_type()),
@@ -156,4 +164,18 @@ fn encode_image(image: image::ImageBuffer<Luma<u8>, Vec<u8>>, format: ImageForma
         }
     };
     result_bytes
+}
+
+use base64::Engine as _;
+const B64_ENGINE: base64::engine::GeneralPurpose = base64::engine::GeneralPurpose::new(
+    &base64::alphabet::STANDARD,
+    base64::engine::general_purpose::NO_PAD,
+);
+pub fn to_base64(buffer: &Vec<u8>, image_format: ImageFormat) -> String {
+    let base64_data = B64_ENGINE.encode(buffer);
+    format!(
+        "data:{};base64,{}",
+        image_format.to_mime_type(),
+        base64_data
+    )
 }

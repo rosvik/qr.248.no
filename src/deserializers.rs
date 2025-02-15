@@ -13,3 +13,15 @@ where
         Some(s) => FromStr::from_str(s).map_err(de::Error::custom).map(Some),
     }
 }
+
+pub fn string_as_bool<'de, D>(de: D) -> Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = String::deserialize(de).unwrap_or("off".to_string());
+    match opt.as_str() {
+        "on" | "true" | "" => Ok(true),
+        "off" | "false" => Ok(false),
+        _ => Ok(false),
+    }
+}
