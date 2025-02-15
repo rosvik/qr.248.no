@@ -71,10 +71,13 @@ async fn get_qr(
         None => get_format_from_filename(filename).unwrap_or(ImageFormat::Png),
     };
 
-    let (result_bytes, header_value) = encode_image(image, image_format);
+    let result_bytes = encode_image(image, image_format);
 
     let mut image_headers = HeaderMap::new();
-    image_headers.insert(CONTENT_TYPE, header_value);
+    image_headers.insert(
+        CONTENT_TYPE,
+        HeaderValue::from_static(image_format.to_mime_type()),
+    );
 
     (StatusCode::OK, image_headers, result_bytes)
 }
@@ -126,28 +129,23 @@ fn get_format_from_filename(filename: String) -> Option<ImageFormat> {
     }
 }
 
-fn encode_image(
-    image: image::ImageBuffer<Luma<u8>, Vec<u8>>,
-    format: ImageFormat,
-) -> (Vec<u8>, HeaderValue) {
+fn encode_image(image: image::ImageBuffer<Luma<u8>, Vec<u8>>, format: ImageFormat) -> Vec<u8> {
     let w = image.width();
     let h = image.height();
     let color_type = ColorType::L8;
 
     let mut result_bytes: Vec<u8> = Vec::new();
 
-    let header_value: HeaderValue = match format {
+    match format {
         ImageFormat::Jpeg => {
             JpegEncoder::new(&mut result_bytes)
                 .encode(&image.into_raw(), w, h, color_type)
                 .unwrap();
-            HeaderValue::from_static("image/jpeg")
         }
         ImageFormat::Bmp => {
             BmpEncoder::new(&mut result_bytes)
                 .encode(&image.into_raw(), w, h, color_type)
                 .unwrap();
-            HeaderValue::from_static("image/bmp")
         }
         // TODO: ImageFormat::Tiff
         // TODO: ImageFormat::Gif
@@ -155,8 +153,7 @@ fn encode_image(
             PngEncoder::new(&mut result_bytes)
                 .write_image(&image.into_raw(), w, h, color_type)
                 .unwrap();
-            HeaderValue::from_static("image/png")
         }
     };
-    (result_bytes, header_value)
+    result_bytes
 }
