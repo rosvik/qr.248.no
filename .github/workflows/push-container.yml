@@ -3,12 +3,25 @@ on:
   push:
     branches:
       - main
+      - rosvik/carg-chef
 
 jobs:
   podman-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      # Cache Cargo dependencies and target directory
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
 
       # Setup for multi architecture build
       - name: Install QEMU
@@ -21,7 +34,7 @@ jobs:
         uses: redhat-actions/buildah-build@v2
         with:
           image: qr.248.no
-          tags: main ${{ github.sha }}
+          tags: test ${{ github.sha }}
           platforms: linux/amd64, linux/arm64
           oci: true
           layers: true
