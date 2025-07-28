@@ -1,6 +1,6 @@
 # Build stage
 
-FROM rust:1.81-alpine3.20 as builder
+FROM rust:1.88-alpine3.20 as builder
 # see https://github.com/rust-lang/docker-rust/issues/85
 ENV RUSTFLAGS="-C target-feature=-crt-static"
 RUN apk add --no-cache musl-dev
